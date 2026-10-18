@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maitree - Daily Income &amp; Expense Bill</title>
+<style>
+:root{color-scheme:light;--bg:#f2f4f8;--sheet:#fff;--ink:#1b2230;--mute:#59627a;--line:#d5dbe8;--biz:#1f4fa3;--home:#b02a5b;--ok:#166534;--bad:#b42318;--on:#fff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 "Segoe UI",system-ui,-apple-system,"Noto Sans",Roboto,sans-serif}
+main{max-width:480px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:1.4rem;line-height:1.2;margin:0}
+h2{font-size:1.1rem;margin:0}
+header{text-align:center;margin-bottom:20px}
+.sub{margin:2px 0 0;color:var(--mute)}
+.timestamp{margin:6px 0 0;color:var(--mute);font-size:.9rem}
+section{margin-top:28px}
+.panel{background:var(--sheet);border:1px solid var(--line);border-radius:10px;padding:16px;margin-top:28px}
+.panel section:first-child{margin-top:0}
+@media (min-width:760px){
+  main{max-width:960px}
+  .page{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px}
+  .panel{margin-top:0}
+}
+.sheet{background:var(--sheet);border:1px solid var(--line);border-radius:10px;padding:6px 16px 16px;margin-top:0;display:flex;flex-direction:column}
+dl{margin:0}
+.l{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.bill-items{display:block;list-style:none;margin:0;padding:0}
+.bill-item{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 0;border:0;border-bottom:1px dashed var(--line);border-radius:0;background:none}
+.bill-item:last-child{border-bottom:0}
+.income-number{min-width:1.5em;color:var(--mute);font-variant-numeric:tabular-nums}
+.bill-item .name{font-weight:400}
+.bill-item .amt{flex:0 1 auto;min-width:0;border:0;background:none;padding:0;white-space:nowrap}
+.bill-item .amt input{width:92px;flex:0 1 92px;padding:4px 0;text-align:right}
+.income-empty{list-style:none;background:none;border:0;color:var(--mute);font-size:.9rem;padding:4px 0}
+.biz-list .income-number{color:var(--biz)}
+.home-list .income-number{color:var(--home)}
+dt{font-weight:600}
+dd{margin:0;font-size:1.15rem;font-weight:600;font-variant-numeric:tabular-nums}
+.biz dt,.biz dd{color:var(--biz)}
+.home dt,.home dd{color:var(--home)}
+.total{border-bottom:0;border-top:2px solid var(--ink);margin-top:4px;padding-top:14px}
+.total dt{font-size:1.1rem;font-weight:700}
+.total dd{font-size:2.3rem;font-weight:700;line-height:1;color:var(--ok)}
+.total dd.neg{color:var(--bad)}
+.warn{margin:8px 0 0;color:var(--bad);font-weight:600}
+ul{list-style:none;margin:10px 0;padding:0;display:grid;gap:8px}
+li{background:var(--sheet);border:1px solid var(--line);border-left:5px solid var(--line);border-radius:10px;padding:10px 12px}
+.name{font-weight:600;overflow-wrap:anywhere}
+.amt{display:flex;align-items:center;gap:4px;flex:1;min-width:130px;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:0 10px}
+.amt input{flex:1;min-width:0;border:0;background:none;color:inherit;font:inherit;padding:10px 0}
+.amt input:focus{outline:none}
+.amt:focus-within,:focus-visible{outline:3px solid var(--biz);outline-offset:2px}
+.field{width:100%;font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.x{background:none;border:0;color:var(--mute);font-size:1.5rem;line-height:1;min-width:44px;min-height:44px;cursor:pointer}
+.add{display:grid;gap:8px;margin-top:12px}
+.row2{display:flex;gap:8px}
+.btn{flex:1;min-height:44px;border:0;border-radius:10px;font:inherit;font-weight:600;color:var(--on);cursor:pointer}
+.btn.inc{background:var(--ok)}
+.btn.biz{background:var(--biz)}
+.btn.home{background:var(--home)}
+.err{margin:0;color:var(--bad);font-size:.9rem}
+.foot{margin-top:28px;color:var(--mute);font-size:.85rem;text-align:center}
+.download{width:100%;margin-top:16px;padding:10px 14px;background:var(--biz)}
+@media print{
+  body{background:#fff;color:#000}
+  main{max-width:none;padding:0}
+  header{margin-bottom:16px}
+  .page{display:block}
+  .sheet{border:0;padding:0}
+  .panel,.download,.foot,.warn,.x{display:none!important}
+  .bill-item .amt{color:#000}
+  .bill-item .amt input{appearance:none;-moz-appearance:textfield;color:#000}
+  .bill-item .amt input::-webkit-inner-spin-button,
+  .bill-item .amt input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+  .total dd{color:#000}
+  .biz dt,.biz dd,.home dt,.home dd{color:#000}
+  .bill-item,.l{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<main>
+  <header>
+  <h1>Maitree Daily Income &amp; Expense Bill</h1>
+  <p class="timestamp" id="billTimestamp"></p>
+  </header>
+
+  <div class="page">
+  <section class="sheet" aria-live="polite">
+    <dl>
+      <div class="l"><dt>INCOME </dt><dd id="tin"></dd></div>
+      <div class="income-details"><ul id="incList" class="bill-items" aria-live="polite"></ul></div>
+      <div class="l biz"><dt>Business Expenses</dt><dd id="tbiz"></dd></div>
+      <div><ul id="bizList" class="bill-items biz-list" aria-live="polite"></ul></div>
+      <div class="l home"><dt>Household Expenses</dt><dd id="thome"></dd></div>
+      <div><ul id="homeList" class="bill-items home-list" aria-live="polite"></ul></div>
+      <div class="l total"><dt>Balance</dt><dd id="rem"></dd></div>
+    </dl>
+    <p class="warn" id="warn" hidden>You are in debt</p>
+    <button class="btn download" id="downloadBill" type="button">Download Bill (PDF)</button>
+  </section>
+
+  <div class="panel">
+  <section>
+    <h2>Income</h2>
+    <div class="add">
+      <input class="field" id="incName" placeholder="Income source eg. Tailor" aria-label="Income source">
+      <div class="row2">
+        <label class="amt"><span>₹</span><input id="incAmt" type="number" inputmode="decimal" min="0" step="any" placeholder="Amount" aria-label="Income amount"></label>
+        <button class="btn inc" data-add="income">+ Add</button>
+      </div>
+      <p class="err" id="incErr" hidden>First write amount.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Expenses</h2>
+    <div class="add">
+      <input class="field" id="expName" placeholder="Where you spent eg. Fabric" aria-label="Expense name">
+      <label class="amt"><span>₹</span><input id="expAmt" type="number" inputmode="decimal" min="0" step="any" placeholder="Amount" aria-label="Expense amount"></label>
+      <div class="row2">
+        <button class="btn biz" data-add="business">+ Business Expense</button>
+        <button class="btn home" data-add="household">+ Household Expense</button>
+      </div>
+      <p class="err" id="expErr" hidden>First write amount</p>
+    </div>
+  </section>
+  </div>
+  </div>
+
+  <p class="foot">@2026 Maitree.</p>
+</main>
+
+<script>
+const state = {
+  income: [],
+  expenses: []
+};
+let nextId = 1;
+
+const $ = id => document.getElementById(id);
+const esc = s => s.replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';');
+const round = n => Math.round(n * 100) / 100;
+const sum = list => round(list.reduce((t, x) => t + x.amount, 0));
+const rupees = n => (n < 0 ? '−' : '') + '₹' + Math.abs(n).toLocaleString('en-IN', {maximumFractionDigits: 2});
+
+function renderLists() {
+  $('incList').innerHTML = renderBillItems(state.income, 'income', 'No income added');
+  for (const [type, listId] of [['business', 'bizList'], ['household', 'homeList']]) {
+    const expenses = state.expenses.filter(expense => expense.type === type);
+    $(listId).innerHTML = renderBillItems(expenses, 'expenses', 'No expenses added');
+  }
+}
+
+function renderBillItems(items, kind, emptyMessage) {
+  return items.map((item, index) =>
+    `<li class="bill-item"><span class="income-number">${index + 1}.</span><span class="name">${esc(item.label)}</span><label class="amt"><span>₹</span><input type="number" inputmode="decimal" min="0" step="any" value="${item.amount}" data-kind="${kind}" data-id="${item.id}" aria-label="${esc(item.label)} amount"></label>${removeBtn(kind, item)}</li>`
+  ).join('') || `<li class="income-empty">${emptyMessage}</li>`;
+}
+
+function renderSummary() {
+  const inc = sum(state.income);
+  const biz = sum(state.expenses.filter(e => e.type === 'business'));
+  const home = sum(state.expenses.filter(e => e.type === 'household'));
+  const rem = round(inc - biz - home);
+  $('tin').textContent = rupees(inc);
+  $('tbiz').textContent = rupees(biz);
+  $('thome').textContent = rupees(home);
+  $('rem').textContent = rupees(rem);
+  $('rem').classList.toggle('neg', rem < 0);
+  $('warn').hidden = rem >= 0;
+}
+
+function renderAll() { renderLists(); renderSummary(); }
+
+function removeBtn(kind, item) {
+  return `<button class="x" data-del="${kind}" data-id="${item.id}" aria-label="Remove ${esc(item.label)}">×</button>`;
+}
+
+function addItem(kind) {
+  const inc = kind === 'income';
+  const amt = $(inc ? 'incAmt' : 'expAmt');
+  const name = $(inc ? 'incName' : 'expName');
+  const amount = parseFloat(amt.value);
+  if (!(amount > 0)) { $(inc ? 'incErr' : 'expErr').hidden = false; amt.focus(); return; }
+  const item = {id: nextId++, label: name.value.trim() || (inc ? 'Earning' : 'Expense'), amount};
+  if (inc) state.income.push(item); else state.expenses.push({...item, type: kind});
+  name.value = amt.value = '';
+  renderAll();
+}
+
+document.addEventListener('input', e => {
+  $('incErr').hidden = $('expErr').hidden = true;
+  const el = e.target, kind = el.dataset.kind;
+  if (!kind) return;
+  const item = state[kind].find(x => x.id === Number(el.dataset.id));
+  if (!item) return;
+  item.amount = Math.max(0, parseFloat(el.value) || 0);
+  renderSummary();
+});
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  if (b.dataset.add) {
+    addItem(b.dataset.add);
+    return;
+  }
+  const id = Number(b.dataset.id);
+  if (!b.dataset.del) return;
+  state[b.dataset.del] = state[b.dataset.del].filter(x => x.id !== id);
+  renderAll();
+});
+
+renderAll();
+const dateTimeFormatter = new Intl.DateTimeFormat('en-IN', {dateStyle: 'medium', timeStyle: 'short'});
+function updateBillTimestamp() {
+  $('billTimestamp').textContent = `Date & time: ${dateTimeFormatter.format(new Date())}`;
+}
+updateBillTimestamp();
+$('downloadBill').addEventListener('click', () => {
+  updateBillTimestamp();
+  window.print();
+});
+</script>
+</body>
+</html>
